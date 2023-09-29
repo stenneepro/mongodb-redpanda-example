@@ -13,7 +13,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 app.use( express.static( path.join( application_root, '/') ) );
 
-//Connect to Redpanda
+// Connect to Redpanda
 const kafka = new Kafka({
   clientId: 'my-app',
   brokers: ['redpanda:9092']
@@ -74,7 +74,6 @@ app.get('/', function (req, res) {
 })
 
 app.post('/api/get', async function (req, res) {
-
   try {
     // Connect the client to the server
     await client.connect();
@@ -83,26 +82,25 @@ app.post('/api/get', async function (req, res) {
     const pipeline = [
       { $match : { company_symbol: {$in : req.body } }},
       {
-        $setWindowFields:
-              {
-                    partitionBy: '$company_name',
-                    sortBy: { 'tx_time': 1 },
-                    output:
-                           {
-                                    averagePrice:
-                                    {
-                                          $avg: "$value",
-                                          window:
-                                                {
-                                                documents:
-                                                     [ "unbounded", "current" ]
-                                                }
-                                    }
-                           }
+        $setWindowFields: {
+          partitionBy: '$company_name',
+          sortBy: { 'tx_time': 1 },
+          output: {
+            averagePrice: {
+              $avg: "$value",
+              window: {
+                documents: [ "unbounded", "current" ]
               }
-    },{$sort: {
-      "tx_time": -1
-    }}, {$limit: req.body.length}
+            }
+          }
+        }
+      },
+      {
+        $sort: {
+          "tx_time": -1
+        }
+      },
+      {$limit: req.body.length}
   ];
   const aggCursor=coll.aggregate(pipeline);
 
@@ -111,7 +109,6 @@ app.post('/api/get', async function (req, res) {
   for await (const doc of aggCursor) {
     x.push(JSON.stringify(doc));
   }
-
   res.send(x);
   } finally {
     // Ensures that the client will close when you finish/error
@@ -121,9 +118,7 @@ app.post('/api/get', async function (req, res) {
 })
 
 //main function that spins up a thread to do the perpetual work of generating tickers
-async function writeStocks(stocklist)
-{
-
+async function writeStocks(stocklist){
   var topic_message;
   if (isMainThread) {
     //listen to topic
@@ -135,17 +130,16 @@ async function writeStocks(stocklist)
     await consumer.connect();
     await consumer.subscribe({ topic: 'status', fromBeginning: false });
 
-     consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
-          topic_message=message.value.toString();
-
-          if (topic_message === 'STOP') {
-            console.log('\n\nStopping the data generation\n\n');
-            consumer.disconnect();
-            worker.terminate();
-          }
-        },
-     });
+    consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        topic_message=message.value.toString();
+        if (topic_message === 'STOP') {
+          console.log('\n\nStopping the data generation\n\n');
+          consumer.disconnect();
+          worker.terminate();
+        }
+      },
+    });
   }
 }
 
@@ -159,7 +153,7 @@ app.get('/api/stop', async (req,res)=>
       messages: [{ value: 'STOP'},],
     })
   });
-  res.send({'status':'stopped'});
+  res.send({status: 'stopped'});
 
 })
 
@@ -180,10 +174,10 @@ app.get('/api/start/:num', (req,res)=>
   var result=[];
 
   //randomly pick words
-  for (i=0; i<=Number(count); i++) {
-    var a=adjectives[randomInt(0,adjectives.length-1)].toUpperCase()
-    var n=nouns[randomInt(0,nouns.length)].toUpperCase()
-    var e=endings[randomInt(0,endings.length-1)].toUpperCase()
+  for (i=0; i <= Number(count); i++) {
+    var a= adjectives[randomInt(0, adjectives.length-1)].toUpperCase()
+    var n= nouns[randomInt(0, nouns.length)].toUpperCase()
+    var e= endings[randomInt(0, endings.length-1)].toUpperCase()
 
     //create the company name
     company_name.push(a + ' ' + n + ' ' + e)
