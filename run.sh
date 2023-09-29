@@ -3,17 +3,17 @@
 set -e
 (
 if lsof -Pi :27017 -sTCP:LISTEN -t >/dev/null ; then
-    echo "Please terminate the local mongod on 27017, consider running 'docker-compose down -v'"
+    echo "Please terminate the local mongod on 27017, consider running 'docker compose down -v'"
     exit 1
 fi
 )
 
 echo "Starting docker ."
-docker-compose up -d --build
+docker compose up -d --build
 
 sleep 5
 echo "\n\nWaiting for the systems to be ready.."
-function test_systems_available {
+test_systems_available() {
   COUNTER=0
   until $(curl --output /dev/null --silent --head --fail http://localhost:$1); do
       printf '.'
@@ -35,9 +35,9 @@ function test_systems_available {
 
 test_systems_available 8083
 
-#echo -e "\nConfiguring the MongoDB ReplicaSet of 1 node...\n"
-#docker-compose exec mongo1 /usr/bin/mongo --eval '''rsconf = { _id : "rs0", members: [ { _id : 0, host : "mongo1:27017", priority: 1.0 }]};
-#rs.initiate(rsconf);'''
+# echo -e "\nConfiguring the MongoDB ReplicaSet of 1 node...\n"
+# docker compose exec mongo1 /usr/bin/mongo --eval '''rsconf = { _id : "rs0", members: [ { _id : 0, host : "mongo1:27017", priority: 1.0 }]};
+# rs.initiate(rsconf);'''
 
 sleep 5
 
@@ -69,7 +69,7 @@ Status of kafka connectors:
 sh status.sh
 
 To tear down the environment and stop these serivces:
-docker-compose down -v
+docker compose down -v
 
 ==============================================================================================================
 '''

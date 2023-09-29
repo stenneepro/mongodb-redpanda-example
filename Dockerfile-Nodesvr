@@ -1,14 +1,14 @@
-
-FROM node:16
+FROM node:18-alpine
 
 # Create app directory /usr/src
 WORKDIR /app
 
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY ./server/package*.json ./
+COPY ./server/package.json ./
+COPY ./server/yarn.lock ./
 
-RUN npm install
+RUN yarn install
 
 # Bundle app source
 COPY ./server .

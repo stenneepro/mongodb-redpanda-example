@@ -21,7 +21,7 @@ const kafka = new Kafka({
 
 //Connect to MongoDB
 const uri =
-  "mongodb://mongo1"; 
+  "mongodb://mongo1";
 const client = new MongoClient(uri);
 
 //This function tests the REST API
@@ -51,7 +51,7 @@ app.get('/api/test',async (req,res)=>
       { value: 'Hello Redpanda!' },
     ],
   })
-  
+
   await producer.disconnect().then(()=>{ res.send({'status':'test message sent to test-topic'});})
 })
 
@@ -109,7 +109,7 @@ app.post('/api/get', async function (req, res) {
   var x=[];
 
   for await (const doc of aggCursor) {
-    x.push(JSON.stringify(doc));    
+    x.push(JSON.stringify(doc));
   }
 
   res.send(x);
@@ -136,21 +136,19 @@ async function writeStocks(stocklist)
     await consumer.subscribe({ topic: 'status', fromBeginning: false });
 
      consumer.run({
-          eachMessage: async ({ topic, partition, message }) => {
-            topic_message=message.value.toString();
+        eachMessage: async ({ topic, partition, message }) => {
+          topic_message=message.value.toString();
 
-            if (topic_message=='STOP') { 
-              console.log('\n\nStopping the data generation\n\n'); 
-              consumer.disconnect(); 
-              worker.terminate();
-            }
-          
-          }, 
-        }); 
-
+          if (topic_message === 'STOP') {
+            console.log('\n\nStopping the data generation\n\n');
+            consumer.disconnect();
+            worker.terminate();
+          }
+        },
+     });
   }
-
 }
+
 //This function places the stop message on the status topic
 app.get('/api/stop', async (req,res)=>
 {
@@ -178,35 +176,34 @@ app.get('/api/start/:num', (req,res)=>
   //load the list of words from the file system
   var nouns = fs.readFileSync('nouns.txt', 'utf8').split('\n');
   var endings = fs.readFileSync('endings.txt', 'utf8').split('\n');
-  var adjectives = fs.readFileSync('adjectives.txt', 'utf8').split('\n');  
+  var adjectives = fs.readFileSync('adjectives.txt', 'utf8').split('\n');
   var result=[];
-  
+
   //randomly pick words
-  for (i=0;i<=Number(count);i++) {
-  var a=adjectives[randomInt(0,adjectives.length-1)].toUpperCase()
-  var n=nouns[randomInt(0,nouns.length)].toUpperCase()
-  var e=endings[randomInt(0,endings.length-1)].toUpperCase()
+  for (i=0; i<=Number(count); i++) {
+    var a=adjectives[randomInt(0,adjectives.length-1)].toUpperCase()
+    var n=nouns[randomInt(0,nouns.length)].toUpperCase()
+    var e=endings[randomInt(0,endings.length-1)].toUpperCase()
 
-  //create the company name
-  company_name.push(a + ' ' + n + ' ' + e)
+    //create the company name
+    company_name.push(a + ' ' + n + ' ' + e)
 
-  //create the symbol based off of the first character of the individual words of the company name
-  var symbol=a.slice(0,1)+n.slice(0,1)+e.slice(0,1);
-  //If we get a duplicate symbol, randomly generate a number at end
-  if (company_symbol.includes(symbol)==true)
-  {
-    symbol=a.slice(0,1)+n.slice(0,1)+e.slice(0,1) +randomInt(0,100);
-  }
-  company_symbol.push(symbol);
-  last_value.push(randomDecimal(0,200));
-  //push it into the JSON object for return to caller
-  result.push({company_symbol: symbol, company_name: (a + ' ' + n + ' ' + e), value: last_value[last_value.length-1] });
+    //create the symbol based off of the first character of the individual words of the company name
+    var symbol=a.slice(0,1)+n.slice(0,1)+e.slice(0,1);
+    //If we get a duplicate symbol, randomly generate a number at end
+    if (company_symbol.includes(symbol) === true) {
+      symbol=a.slice(0,1)+n.slice(0,1)+e.slice(0,1) +randomInt(0,100);
+    }
+    company_symbol.push(symbol);
+    last_value.push(randomDecimal(0,200));
+    //push it into the JSON object for return to caller
+    result.push({company_symbol: symbol, company_name: (a + ' ' + n + ' ' + e), value: last_value[last_value.length-1] });
   }
   writeStocks(result);
   res.send(result)
 })
 
-//Main 
+//Main
 app.listen(port, () => {
   console.log(`Stock traders listening at http://localhost:${port}`)
 })
